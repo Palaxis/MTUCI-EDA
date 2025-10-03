@@ -30,7 +30,7 @@ services:
       retries: 5
 
   zookeeper:
-    image: bitnami/zookeeper:3.9
+    image: bitnamilegacy/zookeeper
     container_name: zookeeper
     environment:
       ALLOW_ANONYMOUS_LOGIN: "yes"
@@ -38,7 +38,7 @@ services:
       - "2181:2181"
 
   kafka:
-    image: bitnami/kafka:3.7
+    image: bitnamilegacy/kafka:3.7.0
     container_name: kafka
     depends_on:
       - zookeeper
@@ -67,6 +67,10 @@ services:
     container_name: svc-auth
     environment:
       PORT: ${AUTH_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
     ports:
       - "${AUTH_PORT:-8001}:${AUTH_PORT:-8001}"
     depends_on:
@@ -81,6 +85,7 @@ services:
     container_name: svc-user
     environment:
       PORT: ${USER_PORT}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
     ports:
       - "${USER_PORT:-8002}:${USER_PORT:-8002}"
     depends_on:
@@ -93,6 +98,8 @@ services:
     container_name: svc-order
     environment:
       PORT: ${ORDER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
     ports:
       - "${ORDER_PORT:-8003}:${ORDER_PORT:-8003}"
     depends_on:
@@ -106,6 +113,7 @@ services:
     container_name: svc-restaurant
     environment:
       PORT: ${RESTAURANT_PORT}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
     ports:
       - "${RESTAURANT_PORT:-8004}:${RESTAURANT_PORT:-8004}"
     depends_on:

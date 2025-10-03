@@ -5,4 +5,5 @@ prometheus-fastapi-instrumentator
 aiokafka
 asyncpg
 sqlalchemy[asyncio]
+python-jose[cryptography]
 

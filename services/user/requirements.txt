@@ -5,4 +5,7 @@ prometheus-fastapi-instrumentator
 asyncpg
 sqlalchemy[asyncio]
 alembic
+passlib==1.7.4
+bcrypt==3.2.2
+email-validator
 
