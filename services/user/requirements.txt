@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic
+prometheus-fastapi-instrumentator
+asyncpg
+sqlalchemy[asyncio]
+alembic
+

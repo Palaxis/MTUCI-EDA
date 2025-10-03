@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pydantic
+prometheus-fastapi-instrumentator
+python-jose[cryptography]
+passlib[bcrypt]
+

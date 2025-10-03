@@ -1,0 +1,128 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    container_name: zookeeper
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_HOST://:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9094
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+
+  auth:
+    build:
+      context: ../services/auth
+    container_name: svc-auth
+    environment:
+      PORT: ${AUTH_PORT}
+    ports:
+      - "${AUTH_PORT:-8001}:${AUTH_PORT:-8001}"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - rabbitmq
+
+  user:
+    build:
+      context: ../services/user
+    container_name: svc-user
+    environment:
+      PORT: ${USER_PORT}
+    ports:
+      - "${USER_PORT:-8002}:${USER_PORT:-8002}"
+    depends_on:
+      - postgres
+      - redis
+
+  order:
+    build:
+      context: ../services/order
+    container_name: svc-order
+    environment:
+      PORT: ${ORDER_PORT}
+    ports:
+      - "${ORDER_PORT:-8003}:${ORDER_PORT:-8003}"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+
+  restaurant:
+    build:
+      context: ../services/restaurant
+    container_name: svc-restaurant
+    environment:
+      PORT: ${RESTAURANT_PORT}
+    ports:
+      - "${RESTAURANT_PORT:-8004}:${RESTAURANT_PORT:-8004}"
+    depends_on:
+      - postgres
+
+  notification:
+    build:
+      context: ../services/notification
+    container_name: svc-notification
+    environment:
+      PORT: ${NOTIFICATION_PORT}
+    ports:
+      - "${NOTIFICATION_PORT:-8005}:${NOTIFICATION_PORT:-8005}"
+    depends_on:
+      - rabbitmq
+
+volumes:
+  pgdata:
+
+

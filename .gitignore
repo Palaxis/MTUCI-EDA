@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Docker
+*.log
+**/.mypy_cache/
+**/.pytest_cache/
+
+# Build
+dist/
+build/
+
+
