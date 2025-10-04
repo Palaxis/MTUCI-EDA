@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import String, Boolean, Integer, Text, ForeignKey, Numeric
 from sqlalchemy import select, update, delete
+import httpx
 
 SECRET_KEY = os.getenv("JWT_SECRET", "replace_me")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
@@ -207,6 +208,18 @@ class OrderOut(BaseModel):
     total_amount: float
 
 
+NOTIFICATION_URL = os.getenv("NOTIFICATION_URL", "http://localhost:8005")
+
+async def notify_user(user_id: int, message: str) -> None:
+    url = f"{NOTIFICATION_URL}/notify/{user_id}"
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            await client.post(url, params={"message": message})
+    except Exception:
+        # Best-effort for MVP
+        pass
+
+
 @app.post("/checkout", response_model=OrderOut, status_code=201)
 async def checkout(payload: CheckoutIn, authorization: Optional[str] = Header(default=None, alias="Authorization")) -> OrderOut:
     user = get_user_from_token(authorization)
@@ -266,6 +279,7 @@ async def checkout(payload: CheckoutIn, authorization: Optional[str] = Header(de
         await session.execute(delete(CartItemModel).where(CartItemModel.user_id == user.id))
         await session.commit()
         await session.refresh(order)
+        await notify_user(user.id, f"Order #{order.id} created with total {total}")
         return OrderOut(id=order.id, status=OrderStatus(order.status), subtotal=float(order.subtotal), delivery_fee=float(order.delivery_fee), total_amount=float(order.total_amount))
 
 
@@ -295,6 +309,7 @@ async def update_order_status(order_id: int, payload: OrderStatusUpdate, authori
             raise HTTPException(status_code=404, detail="Order not found")
         order.status = payload.status.value
         await session.commit()
+        await notify_user(order.customer_id, f"Order #{order.id} status: {order.status}")
         return {"order_id": order_id, "new_status": payload.status}
 
 

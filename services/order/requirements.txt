@@ -6,4 +6,5 @@ aiokafka
 asyncpg
 sqlalchemy[asyncio]
 python-jose[cryptography]
+httpx
 

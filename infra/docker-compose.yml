@@ -102,6 +102,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ALGORITHM: ${JWT_ALGORITHM}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
+      NOTIFICATION_URL: http://svc-notification:${NOTIFICATION_PORT}
     ports:
       - "${ORDER_PORT:-8003}:${ORDER_PORT:-8003}"
     depends_on:
